@@ -7,7 +7,6 @@ int main() {
         float weight;
         int cal;
     };
-    // CandyBar snacks[2] = { {"Mocha Munch", 2.3, 350}, {"Chupa Choups", 1.2, 280} };
     CandyBar* snacks = new CandyBar[2];
 
     snacks[0].brand = "Mocha Munch";
