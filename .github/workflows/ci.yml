@@ -1,0 +1,42 @@
+name: CI
+
+# Every .cpp file is a standalone exercise with its own main(), so each one is
+# compiled and linked on its own. The programs read from stdin and are not run.
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        cxx: [g++, clang++]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compile every exercise with ${{ matrix.cxx }}
+        run: |
+          ${{ matrix.cxx }} --version | head -n 1
+          count=0
+          failed=0
+          while IFS= read -r -d '' file; do
+            count=$((count + 1))
+            if ! ${{ matrix.cxx }} -std=c++17 -Wall -o /dev/null "$file"; then
+              echo "::error file=$file::does not compile with ${{ matrix.cxx }}"
+              failed=$((failed + 1))
+            fi
+          done < <(git ls-files -z '*.cpp')
+          echo "$count files, $failed failed"
+          test "$count" -gt 0
+          test "$failed" -eq 0
